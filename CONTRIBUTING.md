@@ -1,15 +1,15 @@
-# Contributing to Feurstagram
+# Contributing to Pigram
 
-Thanks for considering contributing to Feurstagram.
+Thanks for considering contributing to Pigram.
 
-Feurstagram aims to make Instagram less addictive while keeping the useful parts of the app.
+Pigram aims to make Instagram less addictive while keeping the useful parts of the app.
 
 ## Ways to contribute
 
 You can help by:
 
 - reporting bugs with clear reproduction steps;
-- testing Feurstagram on different Android versions and devices;
+- testing Pigram on different Android versions and devices;
 - improving documentation;
 - improving installation instructions;
 - updating patches for newer Instagram versions;
@@ -22,7 +22,7 @@ Please include:
 
 - your Android version;
 - your device model;
-- the Feurstagram version;
+- the Pigram version;
 - the Instagram version used for patching, if relevant;
 - whether you installed the classic APK or clone APK;
 - steps to reproduce the issue;

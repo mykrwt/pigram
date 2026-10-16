@@ -1,14 +1,12 @@
-# Feurstagram design guidelines
+# Pigram design guidelines
 
-Everything Feurstagram draws — the settings page, the update pages, the confirmation
-cards, the first-run guide — follows **Material 3 Expressive**, in a **monochrome dark
-scheme with white as the only accent**.
+Pigram extension surfaces (settings and update cards) use a restrained, monochrome dark palette. The official Instagram interface remains owned by Instagram; this project does not reskin its feed, DMs or profiles.
 
 Two hard rules:
 
 1. **No hue.** No purple, no brand yellow, no red. If something needs emphasis it gets
    white, more weight, or more space — not a colour.
-2. **No bundled resources.** Feurstagram is merged into Instagram's APK by a patcher; it
+2. **No bundled resources.** Pigram is merged into Instagram's APK by a patcher; it
    has no `res/` of its own. Every drawable is a `GradientDrawable` built at runtime, every
    layout is written in code. This is why the tokens below are Java constants rather than
    a theme.
@@ -24,14 +22,14 @@ than inventing one locally; that is what keeps the surfaces consistent.
 
 | Token | Value | Used for |
 |---|---|---|
-| `SURFACE` | `#0E0E0E` | Page background |
-| `SURFACE_CONTAINER` | `#1B1B1B` | Cards, list rows, the notes panel |
-| `SURFACE_CONTAINER_HIGH` | `#262626` | Tonal buttons, a card raised over a page |
-| `ON_SURFACE` | `#F4F4F4` | Primary text, icons |
+| `SURFACE` | `#0B0B0C` | Page background |
+| `SURFACE_CONTAINER` | `#1C1C1E` | Cards, list rows, the notes panel |
+| `SURFACE_CONTAINER_HIGH` | `#2C2C2E` | Tonal buttons, a card raised over a page |
+| `ON_SURFACE` | `#F5F5F0` | Primary text, icons |
 | `ON_SURFACE_VARIANT` | `#ABABAB` | Supporting text, section labels |
 | `OUTLINE` | `#757575` | Unchecked control marks (switch thumb, radio) |
 | `OUTLINE_VARIANT` | `#3A3A3A` | Hairline borders, unchecked switch tracks |
-| `PRIMARY` | `#FFFFFF` | The accent: filled buttons, checked controls, progress |
+| `PRIMARY` | `#F5F5F0` | The accent: filled buttons, checked controls, progress |
 | `ON_PRIMARY` | `#101010` | Text on a filled accent |
 | `ERROR` / `ON_ERROR` | same as `PRIMARY` / `ON_PRIMARY` | See below |
 | `RIPPLE` | `#26FFFFFF` | Every pressed state |
@@ -40,8 +38,7 @@ than inventing one locally; that is what keeps the surfaces consistent.
 carry the ordinary accent and are made clear by their *wording* — "Enable lock", not
 "Enable" — and by a confirmation card that spells out the consequence.
 
-Emoji in user-visible strings (release notes, the coffee button) keep their own colours.
-That is fine: they are content, not chrome.
+Emoji in user-visible release notes keep their own colours. That is content, not chrome.
 
 ---
 

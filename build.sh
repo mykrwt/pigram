@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# Feurstagram build pipeline.
+# Pigram build pipeline.
 #
 #   ./build.sh <instagram.apk|.apkm|.xapk|.apks> [--clone] [--install] [--debug]
 #
 # Builds the patch bundle (.mpp) from the Gradle project, then applies it to the
-# given Instagram APK with the local Morphe CLI, producing ./feurstagram.apk.
-#   --clone     install side-by-side as a separate package (com.instagram.android.feurstagram)
+# given Instagram APK with the local Morphe CLI, producing ./pigram.apk.
+#   --clone     install side-by-side as a separate package (com.instagram.android.pigram)
 #   --install   install the result on the connected ADB device
+#   PIGRAM_VERSION=<semver> override the patch bundle version (used by release tags)
 #   --debug     enable the Debug bridge patch: the settings become drivable over
 #               ADB broadcasts (see extensions/.../DebugBridge.java). Never ship it.
 #
@@ -16,12 +17,12 @@
 # universal APK with APKEditor (tools/APKEditor-*.jar) before patching. The merge
 # is cached under build/merged/ and reused while it is newer than the bundle.
 #
-# Signing: set FEURSTAGRAM_KEYSTORE_PASS (and optionally FEURSTAGRAM_KEY_PASS)
-# to sign with feurstagram.keystore. That keystore is PKCS12, which the Morphe
+# Signing: set PIGRAM_KEYSTORE_PASS (and optionally PIGRAM_KEY_PASS)
+# to sign with pigram.keystore. That keystore is PKCS12, which the Morphe
 # CLI cannot read (it expects BKS), so the APK is built unsigned and signed with
 # the Android SDK's apksigner — this reproduces the existing release signature,
 # so users update in place without uninstalling. Override the keystore/alias
-# with FEURSTAGRAM_KEYSTORE / FEURSTAGRAM_KEY_ALIAS. Without a keystore password
+# with PIGRAM_KEYSTORE / PIGRAM_KEY_ALIAS. Without a keystore password
 # the CLI signs with a throwaway key (fine for testing, not for release).
 set -euo pipefail
 
@@ -31,7 +32,7 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The CLI jar was renamed morphe-cli-* -> morphe-desktop-* upstream at 1.11; accept both.
 CLI="$(ls -t "$DIR"/tools/morphe-cli-*.jar "$DIR"/tools/morphe-desktop-*.jar 2>/dev/null | head -1 || true)"
-OUT="$DIR/feurstagram.apk"
+OUT="$DIR/pigram.apk"
 
 # Morphe's Android Gradle plugin targets JDK 17-21; pin to 21 so the build does
 # not pick up a newer system JDK.
@@ -65,8 +66,8 @@ JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/java}"
 JAVA_BIN="${JAVA_BIN:-java}"
 
 # Signing material. apksigner ships with the Android SDK build-tools.
-KEYSTORE="${FEURSTAGRAM_KEYSTORE:-$DIR/feurstagram.keystore}"
-KEY_ALIAS="${FEURSTAGRAM_KEY_ALIAS:-feurstagram}"
+KEYSTORE="${PIGRAM_KEYSTORE:-$DIR/pigram.keystore}"
+KEY_ALIAS="${PIGRAM_KEY_ALIAS:-pigram}"
 APKSIGNER=""
 if [ -n "${ANDROID_HOME:-}" ]; then
     APKSIGNER="$(ls -t "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | head -1 || true)"
@@ -125,7 +126,16 @@ case "$APK" in
 esac
 
 echo "==> [1/3] Building patch bundle (.mpp)"
-"$DIR/gradlew" -p "$DIR" :patches:build
+GRADLE_ARGS=(-p "$DIR")
+if [ -n "${PIGRAM_VERSION:-}" ]; then
+    if [[ ! "$PIGRAM_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+        echo "Error: PIGRAM_VERSION must be MAJOR.MINOR.PATCH (received '$PIGRAM_VERSION')." >&2
+        exit 1
+    fi
+    GRADLE_ARGS+=("-Pversion=$PIGRAM_VERSION")
+fi
+GRADLE_ARGS+=(":patches:build")
+"$DIR/gradlew" "${GRADLE_ARGS[@]}"
 MPP="$(ls -t "$DIR"/patches/build/libs/patches-*[0-9].mpp 2>/dev/null | grep -v -- '-sources\|-javadoc' | head -1 || true)"
 if [ -z "$MPP" ]; then
     echo "Error: no .mpp produced under patches/build/libs/" >&2
@@ -145,14 +155,14 @@ ARGS=(-jar "$CLI" patch -p "$MPP" -f -r "$REPORT" -o "$OUT")
 # With a keystore password, defer signing to apksigner (the CLI can't read the
 # PKCS12 keystore); otherwise let the CLI sign with a throwaway key for testing.
 SIGN_WITH_APKSIGNER=0
-if [ -n "${FEURSTAGRAM_KEYSTORE_PASS:-}" ]; then
+if [ -n "${PIGRAM_KEYSTORE_PASS:-}" ]; then
     if [ ! -f "$KEYSTORE" ]; then
         echo "Error: keystore not found: $KEYSTORE" >&2
         exit 1
     fi
     if [ -z "$APKSIGNER" ]; then
         echo "Error: apksigner not found under \$ANDROID_HOME/build-tools." >&2
-        echo "       Install the Android SDK build-tools, or unset FEURSTAGRAM_KEYSTORE_PASS" >&2
+        echo "       Install the Android SDK build-tools, or unset PIGRAM_KEYSTORE_PASS" >&2
         echo "       to sign with a throwaway key (testing only)." >&2
         exit 1
     fi
@@ -170,8 +180,8 @@ if [ "$SIGN_WITH_APKSIGNER" -eq 1 ]; then
     "$APKSIGNER" sign \
         --ks "$KEYSTORE" \
         --ks-key-alias "$KEY_ALIAS" \
-        --ks-pass "pass:$FEURSTAGRAM_KEYSTORE_PASS" \
-        --key-pass "pass:${FEURSTAGRAM_KEY_PASS:-$FEURSTAGRAM_KEYSTORE_PASS}" \
+        --ks-pass "pass:$PIGRAM_KEYSTORE_PASS" \
+        --key-pass "pass:${PIGRAM_KEY_PASS:-$PIGRAM_KEYSTORE_PASS}" \
         --v1-signing-enabled true \
         --v2-signing-enabled true \
         --v3-signing-enabled true \

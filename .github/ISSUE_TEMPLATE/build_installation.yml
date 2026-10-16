@@ -25,9 +25,9 @@ body:
       required: true
 
   - type: input
-    id: feurstagram-version
+    id: pigram-version
     attributes:
-      label: Feurstagram version or commit
+      label: Pigram version or commit
       placeholder: "Example: v1.2.3 or commit hash"
     validations:
       required: false
@@ -88,9 +88,9 @@ body:
       label: Command or install step
       description: Paste the exact command you ran or describe the install step that failed.
       placeholder: |
-        FEURSTAGRAM_KEYSTORE=./feurstagram.keystore \
-        FEURSTAGRAM_KEYSTORE_PASS=android \
-        FEURSTAGRAM_KEY_ALIAS=feurstagram \
+        PIGRAM_KEYSTORE=./pigram.keystore \
+        PIGRAM_KEYSTORE_PASS=android \
+        PIGRAM_KEY_ALIAS=pigram \
         ./patch.sh instagram.apk
     validations:
       required: false

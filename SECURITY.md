@@ -1,6 +1,6 @@
 # Security Policy
 
-Feurstagram is an unofficial open-source patch for the Instagram Android app.
+Pigram is an unofficial open-source patch for the Instagram Android app.
 
 Because this project involves a modified APK and user authentication through Instagram, security reports are taken seriously.
 
@@ -17,7 +17,7 @@ Please report security issues such as:
 
 ## What not to report
 
-Please do not report general Instagram bugs or account issues that are unrelated to Feurstagram.
+Please do not report general Instagram bugs or account issues that are unrelated to Pigram.
 
 ## How to report
 
@@ -27,6 +27,6 @@ Contact the maintainer privately if a contact method is available, or open a min
 
 ## Trust model
 
-Feurstagram does not collect, proxy, store, or transmit Instagram credentials.
+Pigram does not collect, proxy, store, or transmit Instagram credentials.
 
 Users are encouraged to inspect the patches and build the APK themselves.

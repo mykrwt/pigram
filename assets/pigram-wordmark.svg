@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 150" role="img" aria-labelledby="title desc">
+  <title id="title">Pigram</title>
+  <desc id="desc">Pigram wordmark with an understated geometric p mark.</desc>
+  <g fill="#F5F5F0">
+    <path d="M34 20h40v18c16-15 37-22 62-22 49 0 84 34 84 84s-35 84-84 84c-24 0-45-7-62-22v62H34V20zm40 80c0 31 19 50 49 50s49-19 49-50-19-50-49-50-49 19-49 50z" transform="translate(0 -18) scale(.78)"/>
+    <text x="182" y="105" font-family="Inter, SF Pro Display, Helvetica Neue, Arial, sans-serif" font-size="78" font-weight="600" letter-spacing="-2">Pigram</text>
+  </g>
+</svg>
