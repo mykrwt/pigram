@@ -8,6 +8,7 @@
 # given Instagram APK with the local Morphe CLI, producing ./pigram.apk.
 #   --clone     install side-by-side as a separate package (com.instagram.android.pigram)
 #   --install   install the result on the connected ADB device
+#   PIGRAM_VERSION=<semver> override the patch bundle version (used by release tags)
 #   --debug     enable the Debug bridge patch: the settings become drivable over
 #               ADB broadcasts (see extensions/.../DebugBridge.java). Never ship it.
 #
@@ -125,7 +126,16 @@ case "$APK" in
 esac
 
 echo "==> [1/3] Building patch bundle (.mpp)"
-"$DIR/gradlew" -p "$DIR" :patches:build
+GRADLE_ARGS=(-p "$DIR")
+if [ -n "${PIGRAM_VERSION:-}" ]; then
+    if [[ ! "$PIGRAM_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+        echo "Error: PIGRAM_VERSION must be MAJOR.MINOR.PATCH (received '$PIGRAM_VERSION')." >&2
+        exit 1
+    fi
+    GRADLE_ARGS+=("-Pversion=$PIGRAM_VERSION")
+fi
+GRADLE_ARGS+=(":patches:build")
+"$DIR/gradlew" "${GRADLE_ARGS[@]}"
 MPP="$(ls -t "$DIR"/patches/build/libs/patches-*[0-9].mpp 2>/dev/null | grep -v -- '-sources\|-javadoc' | head -1 || true)"
 if [ -z "$MPP" ]; then
     echo "Error: no .mpp produced under patches/build/libs/" >&2

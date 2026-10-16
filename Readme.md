@@ -92,6 +92,45 @@ When Pigram releases are published on GitHub, the optional in-app updater can ch
 for a newer version. It can be disabled in settings. This project does not operate an
 official Instagram account or promise social-media update notices.
 
+## Codemagic Android releases
+
+The `pigram-android-release` workflow uses the existing `build.sh` pipeline: it builds the Morphe patch bundle, applies it to a supplied Instagram APK with the pinned Morphe CLI, signs the Pigram clone, verifies the signature, and publishes `Pigram-vMAJOR.MINOR.PATCH.apk`. It runs only when a matching Git tag is pushed; it does not build every branch or run on a manual Codemagic “Start new build” request.
+
+### One-time Codemagic setup
+
+1. Connect `mykrwt/pigram` to Codemagic and enable the repository webhook/tag events.
+2. On an **individual Codemagic account**, add an environment-variable group named `pigram_release_secrets` with:
+   - `INSTAGRAM_APK_URL`: secret direct HTTPS URL to a user-provided **universal `.apk`**. The source Instagram APK is not stored or released by this repository.
+   - `MORPHE_PACKAGE_USER` and secret `MORPHE_PACKAGE_TOKEN`: GitHub username and a token with `read:packages` access to Morphe's Gradle package.
+   - secret `GH_TOKEN`: fine-grained GitHub token scoped to `mykrwt/pigram`, with **Contents: read and write** permission. It is used only to create the release and upload the APK.
+3. In Codemagic Android code signing, upload the long-term Pigram **PKCS#12** keystore and alias as `pigram_release_keystore`. The workflow reads Codemagic's protected signing identity; do not commit a keystore or passwords.
+4. Confirm that the account is the Codemagic Free **individual** plan. Current pricing documentation (checked 2026-10-16) lists 500 monthly minutes on macOS M2 for individual accounts; teams receive no free minutes, and Linux/Windows builds are paid. This workflow therefore uses `mac_mini_m2`, limits itself to tag releases, and skips branch validation. See [Codemagic pricing](https://docs.codemagic.io/billing/pricing/) and [GitHub Release publishing](https://docs.codemagic.io/yaml-distributing/github-releases/).
+
+### Start a release
+
+After the workflow is merged to `main`, update `CHANGELOG.md` and create a new, never-before-used version tag from the release commit. The repository has no prior Git tags; its current Gradle version is `1.0.0`, so the initial tag convention is `v1.0.0`.
+
+```sh
+git switch main
+git pull --ff-only origin main
+# Update and commit CHANGELOG.md (and any release content) first.
+git tag -a v1.0.0 -m "Pigram v1.0.0"
+git push origin v1.0.0
+```
+
+For later releases, increment the semantic version (`v1.0.1`, `v1.1.0`, etc.) and push the new tag. Codemagic validates the exact `vMAJOR.MINOR.PATCH` format, uses that tag for the Gradle patch version and APK filename, records the commit SHA, and uses the matching `CHANGELOG.md` section (or `Unreleased`) for the release notes. A duplicate GitHub Release is rejected rather than overwritten.
+
+Download the APK and signature-verification report from Codemagic’s build artifacts; a successful tag build also creates the corresponding GitHub Release with the versioned APK attached. The APK signature is verified with Android `apksigner`; this does **not** establish compatibility with every device or guarantee an update over an installation signed with a different key. Reuse the same keystore for updates. If no compatible Pigram signing key exists, users may need to uninstall the older build first, which can remove local app data.
+
+### Troubleshooting
+
+- **No build starts:** check the repository webhook and that the pushed tag matches `v*`.
+- **Tag rejected:** use exactly `vMAJOR.MINOR.PATCH`; never reuse a released tag.
+- **Download or Gradle failure:** check that the direct URL still serves a universal APK and that the Morphe package token has `read:packages` access.
+- **Signing failure:** recheck the Codemagic code-signing reference, alias and passwords; never paste credentials into logs.
+- **Release upload failure:** verify the fine-grained `GH_TOKEN` has `Contents: read and write` for this repository and that the release does not already exist.
+- **Build minutes exhausted:** the individual Free allowance is monthly; avoid unnecessary tag builds and check current Codemagic pricing/account type.
+
 ## Contact
 
 For project questions or bug reports, please use the [GitHub issues](https://github.com/mykrwt/pigram/issues).

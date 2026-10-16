@@ -1,0 +1,225 @@
+workflows:
+  pigram-android-release:
+    name: Pigram Android APK release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    working_directory: .
+
+    environment:
+      java: 21
+      groups:
+        - pigram_release_secrets
+      android_signing:
+        - pigram_release_keystore
+      vars:
+        # Pin the CLI to a stable release; update deliberately after checking compatibility.
+        MORPHE_CLI_VERSION: "1.18.1"
+
+    cache:
+      cache_paths:
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+      branch_patterns:
+        - pattern: "*"
+          include: true
+          source: true
+
+    scripts:
+      - name: Validate release tag and required Codemagic secrets
+        script: |
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+
+          if [[ -z "${CM_TAG:-}" ]]; then
+            echo "Release builds must be triggered by a Git tag (expected vMAJOR.MINOR.PATCH)." >&2
+            exit 1
+          fi
+          if [[ ! "$CM_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Invalid release tag '$CM_TAG'; expected vMAJOR.MINOR.PATCH, for example v1.0.0." >&2
+            exit 1
+          fi
+          for required in INSTAGRAM_APK_URL MORPHE_PACKAGE_USER MORPHE_PACKAGE_TOKEN GH_TOKEN; do
+            if [[ -z "${!required:-}" ]]; then
+              echo "Missing required Codemagic secret/environment variable: $required" >&2
+              exit 1
+            fi
+          done
+          for required in CM_KEYSTORE CM_KEYSTORE_PASSWORD CM_KEY_ALIAS_USERNAME CM_KEY_ALIAS_PASSWORD; do
+            if [[ -z "${!required:-}" ]]; then
+              echo "Missing Android signing identity '$required'; configure pigram_release_keystore in Codemagic." >&2
+              exit 1
+            fi
+          done
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "GitHub CLI (gh) is unavailable on this Codemagic image; cannot publish a release." >&2
+            exit 1
+          fi
+          if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+            echo "GH_TOKEN is not accepted by GitHub CLI; check the Codemagic secret and repository permission." >&2
+            exit 1
+          fi
+          if gh release view "$CM_TAG" --repo mykrwt/pigram >/dev/null 2>&1; then
+            echo "GitHub Release $CM_TAG already exists. Refusing to rebuild or overwrite it." >&2
+            exit 1
+          fi
+
+          VERSION="${CM_TAG#v}"
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          echo "Validated release $CM_TAG at commit $COMMIT_SHA"
+          echo "Release version: $VERSION"
+
+      - name: Download private input APK and pinned Morphe CLI
+        script: |
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+
+          mkdir -p "$CM_BUILD_DIR/tools"
+          SOURCE_APK="$CM_BUILD_DIR/instagram-source.apk"
+          DOWNLOAD_ERROR="$CM_BUILD_DIR/.instagram-download-error"
+          if ! curl --fail --silent --show-error --location --retry 3 \
+              "$INSTAGRAM_APK_URL" --output "$SOURCE_APK" 2>"$DOWNLOAD_ERROR"; then
+            rm -f "$SOURCE_APK" "$DOWNLOAD_ERROR"
+            echo "Could not download the configured Instagram APK. Check INSTAGRAM_APK_URL and its access policy." >&2
+            exit 1
+          fi
+          rm -f "$DOWNLOAD_ERROR"
+          if [[ ! -s "$SOURCE_APK" ]] || ! unzip -tq "$SOURCE_APK" >/dev/null 2>&1; then
+            rm -f "$SOURCE_APK"
+            echo "INSTAGRAM_APK_URL did not provide a valid universal APK. Use a direct HTTPS URL to a .apk file (not an .apkm/.xapk bundle)." >&2
+            exit 1
+          fi
+
+          CLI="$CM_BUILD_DIR/tools/morphe-desktop-${MORPHE_CLI_VERSION}-all.jar"
+          CLI_URL="https://github.com/MorpheApp/morphe-desktop/releases/download/v${MORPHE_CLI_VERSION}/morphe-desktop-${MORPHE_CLI_VERSION}-all.jar"
+          curl --fail --silent --show-error --location --retry 3 "$CLI_URL" --output "$CLI"
+          if [[ ! -s "$CLI" ]] || ! jar tf "$CLI" >/dev/null 2>&1; then
+            rm -f "$CLI"
+            echo "Pinned Morphe Desktop CLI download is missing or invalid: $MORPHE_CLI_VERSION" >&2
+            exit 1
+          fi
+          echo "Downloaded Instagram APK and Morphe Desktop CLI $MORPHE_CLI_VERSION."
+
+      - name: Build and sign Pigram APK
+        script: |
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+
+          VERSION="${CM_TAG#v}"
+          OUTPUT_DIR="$CM_BUILD_DIR/output"
+          mkdir -p "$OUTPUT_DIR"
+          printf 'sdk.dir=%s\n' "$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+
+          # The Gradle plugin dependency is hosted on GitHub Packages and requires read:packages.
+          export GITHUB_ACTOR="$MORPHE_PACKAGE_USER"
+          export GITHUB_TOKEN="$MORPHE_PACKAGE_TOKEN"
+          # Use the tag as the Gradle patch-bundle version as well as in the APK filename.
+          export PIGRAM_VERSION="$VERSION"
+
+          # Codemagic's Android signing identity is encrypted in its UI. Decode it only in
+          # the build workspace; build.sh signs with apksigner and verifies the signature.
+          KEYSTORE_PATH="$CM_BUILD_DIR/.pigram-release.p12"
+          printf '%s' "$CM_KEYSTORE" | base64 -D > "$KEYSTORE_PATH"
+          chmod 600 "$KEYSTORE_PATH"
+          export PIGRAM_KEYSTORE="$KEYSTORE_PATH"
+          export PIGRAM_KEYSTORE_PASS="$CM_KEYSTORE_PASSWORD"
+          export PIGRAM_KEY_ALIAS="$CM_KEY_ALIAS_USERNAME"
+          export PIGRAM_KEY_PASS="$CM_KEY_ALIAS_PASSWORD"
+
+          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          ./build.sh "$CM_BUILD_DIR/instagram-source.apk" --clone
+
+          APK_SOURCE="$CM_BUILD_DIR/pigram.apk"
+          APK_OUTPUT="$OUTPUT_DIR/Pigram-${CM_TAG}.apk"
+          if [[ ! -s "$APK_SOURCE" ]]; then
+            echo "build.sh finished without producing a non-empty $APK_SOURCE" >&2
+            exit 1
+          fi
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner -print 2>/dev/null | sort | tail -n 1)"
+          if [[ -z "$APKSIGNER" ]]; then
+            echo "Android SDK apksigner was not found; refusing to publish an unverified APK." >&2
+            exit 1
+          fi
+          "$APKSIGNER" verify --verbose --print-certs "$APK_SOURCE" > "$OUTPUT_DIR/signature-verification.txt"
+          cp "$APK_SOURCE" "$APK_OUTPUT"
+
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          APK_SHA256="$(shasum -a 256 "$APK_OUTPUT" | awk '{print $1}')"
+          {
+            printf 'version=%s\n' "$CM_TAG"
+            printf 'commit=%s\n' "$COMMIT_SHA"
+            printf 'apk=%s\n' "$(basename "$APK_OUTPUT")"
+            printf 'sha256=%s\n' "$APK_SHA256"
+          } > "$OUTPUT_DIR/release-info.txt"
+
+          extract_changelog_section() {
+            local heading="$1"
+            awk -v heading="$heading" '
+              $0 == heading { found=1; next }
+              found && /^## / { exit }
+              found { print }
+            ' "$CM_BUILD_DIR/CHANGELOG.md"
+          }
+          CHANGELOG_TEXT="$(extract_changelog_section "## $CM_TAG")"
+          if [[ -z "${CHANGELOG_TEXT//[[:space:]]/}" ]]; then
+            CHANGELOG_TEXT="$(extract_changelog_section '## Unreleased')"
+          fi
+          if [[ -z "${CHANGELOG_TEXT//[[:space:]]/}" ]]; then
+            CHANGELOG_TEXT="No matching version or Unreleased section was found in CHANGELOG.md."
+          fi
+
+          NOTES_FILE="$OUTPUT_DIR/release-notes.md"
+          {
+            printf '# Pigram %s\n\n' "$CM_TAG"
+            printf -- '- Commit: `%s`\n' "$COMMIT_SHA"
+            printf -- '- APK SHA-256: `%s`\n\n' "$APK_SHA256"
+            printf '## Changelog\n\n%s\n' "$CHANGELOG_TEXT"
+          } > "$NOTES_FILE"
+
+          echo "Verified signed APK: $APK_OUTPUT"
+          echo "SHA-256: $APK_SHA256"
+
+      - name: Publish the versioned GitHub Release
+        script: |
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+
+          if [[ -z "${CM_TAG:-}" ]] || [[ ! "$CM_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "Refusing to publish: CM_TAG is missing or is not vMAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+          APK="$CM_BUILD_DIR/output/Pigram-${CM_TAG}.apk"
+          NOTES="$CM_BUILD_DIR/output/release-notes.md"
+          if [[ ! -s "$APK" ]] || [[ ! -s "$NOTES" ]]; then
+            echo "Refusing to publish: expected a non-empty versioned APK and release-notes.md." >&2
+            exit 1
+          fi
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "GitHub CLI (gh) is unavailable on this Codemagic image; cannot publish the release." >&2
+            exit 1
+          fi
+          if gh release view "$CM_TAG" --repo mykrwt/pigram >/dev/null 2>&1; then
+            echo "GitHub Release $CM_TAG already exists. Refusing to overwrite a prior release." >&2
+            exit 1
+          fi
+
+          gh release create "$CM_TAG" \
+            --repo mykrwt/pigram \
+            --verify-tag \
+            --title "Pigram $CM_TAG" \
+            --notes-file "$NOTES" \
+            "$APK"
+
+    artifacts:
+      - output/Pigram-v*.apk
+      - output/release-info.txt
+      - output/release-notes.md
+      - output/signature-verification.txt
