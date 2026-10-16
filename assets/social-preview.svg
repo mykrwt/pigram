@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Pigram — Quiet by design. Connected by choice.</title>
+  <desc id="desc">A calm, minimal Pigram brand card in obsidian and ivory.</desc>
+  <rect width="1200" height="630" fill="#0B0B0C"/>
+  <circle cx="925" cy="110" r="330" fill="#1C1C1E" opacity=".42"/>
+  <circle cx="220" cy="620" r="330" fill="#1C1C1E" opacity=".24"/>
+  <g transform="translate(120 155)">
+    <rect width="260" height="260" rx="58" fill="#1C1C1E" stroke="#353538" stroke-width="2"/>
+    <path d="M82 57h35v16c14-13 31-20 52-20 42 0 71 29 71 72s-29 72-71 72c-21 0-38-7-52-20v53H82V57zm35 68c0 26 16 42 41 42s41-16 41-42-16-42-41-42-41 16-41 42z" fill="#F5F5F0" transform="translate(-3 0)"/>
+  </g>
+  <text x="450" y="245" fill="#F5F5F0" font-family="Inter, SF Pro Display, Helvetica Neue, Arial, sans-serif" font-size="112" font-weight="600" letter-spacing="-5">Pigram</text>
+  <text x="457" y="322" fill="#ABABAE" font-family="Inter, SF Pro Display, Helvetica Neue, Arial, sans-serif" font-size="34" font-weight="400" letter-spacing=".4">Quiet by design. Connected by choice.</text>
+  <path d="M457 374h500" stroke="#38383A" stroke-width="2"/>
+  <text x="457" y="427" fill="#F5F5F0" font-family="Inter, SF Pro Display, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="500">Your people. Your photos. Your conversations.</text>
+  <text x="457" y="468" fill="#ABABAE" font-family="Inter, SF Pro Display, Helvetica Neue, Arial, sans-serif" font-size="19">A calmer social experience, on your terms.</text>
+</svg>

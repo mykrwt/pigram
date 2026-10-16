@@ -162,10 +162,10 @@ public final class UpdateChecker implements Runnable {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
 
-    /** True when this is the side-by-side clone package (asset name ends in -clone.apk). */
+    /** True when this is a side-by-side clone package, including the legacy clone suffix. */
     private boolean isCloneBuild() {
         String pkg = context.getPackageName();
-        return pkg != null && pkg.endsWith(".pigram");
+        return pkg != null && (pkg.endsWith(".pigram") || pkg.endsWith(".feurstagram"));
     }
 
     /** Everything the prompt and the download need about the release on offer. */

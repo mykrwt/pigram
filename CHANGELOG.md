@@ -2,6 +2,8 @@
 
 All notable changes to Pigram should be documented in this file.
 
+> **Project history note:** Versioned entries below are inherited from the upstream Feurstagram history and describe those releases, not Pigram releases. Pigram is a fork and has not verified those release-specific claims against current Instagram builds.
+
 ## Unreleased
 
 Nothing yet.
@@ -30,33 +32,20 @@ Nothing yet.
 ## v450-0-0-50-77
 
 ### Changed
-- **New official Instagram account.** Pigram moved to a new account,
-  [@pigram_off](https://www.instagram.com/pigram_off/). The card shown after an
-  install or update now introduces it as the new account, and *Follow* opens it. The card
-  runs once per update, so users who already dismissed it for the old account see it again
-  with this release.
-- The README and the website (home page, French home page, press kits, Instagram without
-  Reels pages and structured data) link to the new account.
+- The upstream Feurstagram release added a post-install follow prompt and associated links. Pigram removes that prompt and does not operate an official Instagram account.
 - Updated to Instagram 450.0.0.50.77. The guides that name the Instagram version they were
   checked against now name 450.0.0.50.77.
 
 ## v446-0-0-49-77
 
 ### Added
-- **Follow the official account.** The first launch after installing or updating
-  Pigram shows a card inviting the user to follow
-  [@pigram_official](https://www.instagram.com/pigram_official/), where every
-  release is announced. *Follow* opens the profile inside the app, *Not now* closes it.
-  "After an install or update" is read from the package's `lastUpdateTime`, not its
-  versionName, so a re-release on the same Instagram base counts too; it is shown once per
-  install or update, and the "What's new" card only runs once it has been dismissed.
+- The upstream Feurstagram release introduced a post-install account-follow prompt. Pigram removes it to avoid unsolicited promotion and does not claim an official social account.
 - **Website: Instagram without Reels pages, guides and a press kit.** A landing page for
   "Instagram without Reels" comparing the ways to hide Reels, guides (removing Reels on
   Android, Instagram without the feed, DFInstagram alternative, Pigram vs ScrollGuard vs
   WallHabit, the EU's findings on Instagram's addictive design), a press kit, a French
   version of the main pages, structured data, `hreflang` pairs and a `sitemap.xml`.
-- The website shows the total download count, loaded from GitHub when the page opens, and
-  the official contact address, pigram@gmail.com.
+- The upstream website displayed release download counts and its then-current project contact details.
 
 ### Fixed
 - **Deep links keep working on Instagram 446.** Instagram 446 reshaped the family-app scope

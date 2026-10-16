@@ -36,7 +36,7 @@ private fun Instruction.isUriLoad() =
 @Suppress("unused")
 val networkBlockPatch = bytecodePatch(
     name = "Network content blocking",
-    description = "Blocks the feed, stories, explore, reels, ads, suggestions and tracking " +
+    description = "Optionally hides the feed, stories, explore, reels, ads and suggestions; always blocks tracking " +
         "at the network layer, gated on the runtime toggles.",
     default = true,
 ) {

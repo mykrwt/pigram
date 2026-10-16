@@ -53,7 +53,7 @@ public final class DebugBridge {
     private static final String PREFIX = "com.pigram.debug.";
 
     /** Same store {@link Config} writes to. */
-    private static final String PREFS = "pigram_prefs";
+    private static final String PREFS = "feurstagram_prefs"; // Shared legacy setting store.
 
     private static final String LANDING_KEY = "landing_page";
 

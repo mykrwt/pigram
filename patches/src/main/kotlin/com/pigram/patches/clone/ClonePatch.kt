@@ -24,7 +24,8 @@ private const val ORIGINAL_PACKAGE_NAME = "com.instagram.android"
 val clonePatch = resourcePatch(
     name = "Clone",
     description = "Renames the package and app label so the patched build installs " +
-        "alongside a stock Instagram instead of replacing it.",
+        "alongside a stock Instagram instead of replacing it. The launcher icon remains " +
+        "from the supplied APK; custom icon resource replacement is not implemented.",
     default = false,
 ) {
     compatibleWith(COMPATIBILITY_INSTAGRAM)

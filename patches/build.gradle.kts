@@ -5,9 +5,9 @@ patches {
         name = "Pigram Patches"
         description = "Pigram: a calm, premium, distraction-free Instagram — keeps DMs, stories, search, profiles and photography, removes reels, explore, ads and noise, with a runtime toggle and an optional permanent lock."
         source = "git@github.com:mykrwt/pigram.git"
-        author = "Jean Herail"
-        contact = "na"
-        website = "na"
+        author = "Pigram contributors"
+        contact = "https://github.com/mykrwt/pigram/issues"
+        website = "https://github.com/mykrwt/pigram"
         license = "GPLv3"
     }
 }

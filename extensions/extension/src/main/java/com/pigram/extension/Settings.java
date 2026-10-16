@@ -41,7 +41,7 @@ import java.util.List;
  * through {@link Config}.
  *
  * <h3>The look: Material 3 Expressive, monochrome</h3>
- * White is the only accent — no hue anywhere, so the panel reads as part of a
+ * Ivory is the only accent — no hue anywhere, so the panel reads as part of a
  * dark OS rather than as a themed app. The Expressive part is in the shapes and
  * the type: large corner radii, options grouped into "connected" lists where the
  * group's outer corners are round and the joints between rows are nearly square,
@@ -62,7 +62,7 @@ import java.util.List;
  */
 public final class Settings {
 
-    // --- Colour: a neutral dark scheme with white as the single accent --------
+    // --- Colour: a neutral dark scheme with ivory as the single accent ----------
 
     /** Page background. */
     public static final int SURFACE = 0xFF0B0B0C; // Obsidian
@@ -75,13 +75,13 @@ public final class Settings {
     public static final int OUTLINE = 0xFF757575;
     public static final int OUTLINE_VARIANT = 0xFF3A3A3A;
     /** The accent. Monochrome by design: white. */
-    public static final int PRIMARY = 0xFFFFFFFF;
+    public static final int PRIMARY = 0xFFF5F5F0;
     public static final int ON_PRIMARY = 0xFF101010;
     /**
      * Destructive actions. A monochrome scheme has no red to lean on, so they
      * carry the same accent and are distinguished by their wording instead.
      */
-    public static final int ERROR = 0xFFFFFFFF;
+    public static final int ERROR = PRIMARY;
     public static final int ON_ERROR = 0xFF101010;
     public static final int DIVIDER = 0xFF2A2A2A;
     public static final int RIPPLE = 0x26FFFFFF;
@@ -111,9 +111,8 @@ public final class Settings {
         tabBar.getViewTreeObserver().addOnGlobalLayoutListener(new HomeTabWatcher(tabBar));
         Hiders.installAll(tabBar);
         Context activity = getActivityContext(tabBar);
-        // The follow card comes first after an install or update; "What's new"
-        // waits until it is dismissed.
-        FollowPrompt.maybeShow(activity, () -> UpdateChecker.checkWhatsNew(activity));
+        // Keep release notes non-blocking; no project promotion prompt is shown.
+        UpdateChecker.checkWhatsNew(activity);
         UpdateChecker.check(activity);
     }
 
@@ -414,7 +413,7 @@ public final class Settings {
         subtitle.setText(hardcore
                 ? "Permanent lock is on. You can tighten blocks but not loosen them. "
                         + "Reinstall to fully unlock."
-                : "Choose what to hide. Tap Done to clear the cache and restart.");
+                : "Quiet by design. Connected by choice.\nKeep your people, photos and private chats close.");
         body(subtitle);
         subtitle.setPadding(0, dp(context, 6), 0, 0);
         header.addView(subtitle);
@@ -431,17 +430,17 @@ public final class Settings {
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        LinearLayout surfaces = addSection(context, column, "Blocked surfaces");
-        addRow(context, surfaces, "Home feed", "block_feed", Config.isFeedBlocked());
-        addRow(context, surfaces, "Explore", "block_explore", Config.isExploreBlocked());
-        addRow(context, surfaces, "Reels", "block_reels", Config.isReelsBlocked());
-        addRow(context, surfaces, "Friends in Reels", "block_friends_lane", Config.isFriendsLaneBlocked());
-        addRow(context, surfaces, "Stories", "block_stories", Config.isStoriesBlocked());
-        addRow(context, surfaces, "Instants", "block_instants", Config.isInstantsBlocked());
-        addRow(context, surfaces, "Notes", "block_notes", Config.isNotesBlocked());
-        addRow(context, surfaces, "Suggested accounts", "block_suggested", Config.isSuggestedBlocked());
-        addRow(context, surfaces, "Ads", "block_ads", Config.isAdsBlocked());
-        addRow(context, surfaces, "Notifications button", "block_notifications",
+        LinearLayout surfaces = addSection(context, column, "Your experience");
+        addRow(context, surfaces, "Hide Home feed", "block_feed", Config.isFeedBlocked());
+        addRow(context, surfaces, "Hide Explore", "block_explore", Config.isExploreBlocked());
+        addRow(context, surfaces, "Hide Reels", "block_reels", Config.isReelsBlocked());
+        addRow(context, surfaces, "Hide Friends in Reels", "block_friends_lane", Config.isFriendsLaneBlocked());
+        addRow(context, surfaces, "Hide Stories", "block_stories", Config.isStoriesBlocked());
+        addRow(context, surfaces, "Hide Instants", "block_instants", Config.isInstantsBlocked());
+        addRow(context, surfaces, "Hide Notes", "block_notes", Config.isNotesBlocked());
+        addRow(context, surfaces, "Hide suggested accounts", "block_suggested", Config.isSuggestedBlocked());
+        addRow(context, surfaces, "Hide ads", "block_ads", Config.isAdsBlocked());
+        addRow(context, surfaces, "Hide notifications button", "block_notifications",
                 Config.isNotificationsButtonBlocked());
         sealGroup(context, surfaces);
 
@@ -484,16 +483,12 @@ public final class Settings {
         checkUpdate.setOnClickListener(v -> UpdateChecker.checkNow(context));
         column.addView(checkUpdate, stackedButtonParams(context, 12));
 
-        addSectionLabel(context, column, "Support");
+        addSectionLabel(context, column, "Project");
 
-        Button sponsors = makeButton(context, "Donate on GitHub Sponsors", 0, ON_SURFACE, false);
-        sponsors.setBackground(outlined(context, OUTLINE_VARIANT));
-        sponsors.setOnClickListener(v -> openUrl(context, "https://github.com/sponsors/jean-voila"));
-        column.addView(sponsors, stackedButtonParams(context, 0));
-
-        Button coffee = makeButton(context, "☕  Buy me a coffee", SURFACE_CONTAINER_HIGH, ON_SURFACE, true);
-        coffee.setOnClickListener(v -> openUrl(context, "https://buymeacoffee.com/jean_voila"));
-        column.addView(coffee, stackedButtonParams(context, 10));
+        Button sourceLink = makeButton(context, "Pigram on GitHub", 0, ON_SURFACE, false);
+        sourceLink.setBackground(outlined(context, OUTLINE_VARIANT));
+        sourceLink.setOnClickListener(v -> openUrl(context, "https://github.com/mykrwt/pigram"));
+        column.addView(sourceLink, stackedButtonParams(context, 0));
 
         // Pinned action bar. Two equal pills rather than end-aligned buttons: it
         // cannot overflow, however narrow the screen or long the label.
@@ -556,7 +551,7 @@ public final class Settings {
         }
         showConfirm(context, "Enable permanent lock?",
                 "This is permanent for this installation. You will no longer be able to "
-                        + "re-enable Home feed, Explore, Reels or Stories without reinstalling the app.",
+                        + "re-enable surfaces you have permanently hidden without reinstalling the app.",
                 "Enable lock", ERROR, ON_ERROR,
                 () -> {
                     Config.enableHardcoreMode();
@@ -825,12 +820,13 @@ public final class Settings {
 
     private static String supportText(String key) {
         if (key.equals("auto_update")) return "Check GitHub for a new version on launch.";
-        if (key.equals("block_ads")) return "Block sponsored ads across Instagram.";
-        if (key.equals("limit_following_feed")) return "Show only accounts you follow (needs the feed unblocked).";
+        if (key.equals("block_feed")) return "Hide the home timeline. Off by default; followed accounts remain easy to reach.";
+        if (key.equals("block_ads")) return "Hide sponsored posts and ad surfaces where supported.";
+        if (key.equals("limit_following_feed")) return "Prioritize posts from accounts you follow (needs the feed visible).";
         if (key.equals("hide_toasts")) return "Hide every Instagram popup, including “couldn’t refresh feed”.";
         if (key.equals("force_sdr")) return "Keep blacks deep by stopping Instagram forcing HDR on the UI.";
         if (key.equals("block_friends_lane")) return "Hide the Friends tab and its avatars in the Reels header.";
-        if (key.equals("block_notifications")) return "Hide the notifications (heart) button in the feed header.";
+        if (key.equals("block_notifications")) return "Hide the notifications shortcut in the feed header.";
         if (key.startsWith("nav_show_")) return "Show this icon in the navigation bar.";
         return "Hide this surface in Instagram.";
     }

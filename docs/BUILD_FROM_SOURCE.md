@@ -1,6 +1,6 @@
 # Build from source
 
-This guide explains how to build Feurstagram yourself. Building from source lets
+This guide explains how to build Pigram yourself. Building from source lets
 you inspect the patches and avoid trusting a prebuilt APK.
 
 ## Requirements
@@ -18,8 +18,8 @@ you inspect the patches and avoid trusting a prebuilt APK.
 
 1. Clone the repository.
    ```sh
-   git clone https://github.com/jean-voila/Feurstagram.git
-   cd Feurstagram
+   git clone https://github.com/mykrwt/pigram.git
+   cd pigram
    ```
 
 2. Build and apply the patches to your Instagram APK.
@@ -34,13 +34,13 @@ you inspect the patches and avoid trusting a prebuilt APK.
 
 3. Install the signed result (if you did not pass `--install`).
    ```sh
-   adb install -r feurstagram.apk
+   adb install -r pigram.apk
    ```
 
 ## Signing
 
-The bundle is signed during the build. Set `FEURSTAGRAM_KEYSTORE_PASS` (and
-optionally `FEURSTAGRAM_KEY_PASS`) to sign with `feurstagram.keystore`;
+The bundle is signed during the build. Set `PIGRAM_KEYSTORE_PASS` (and
+optionally `PIGRAM_KEY_PASS`) to sign with `pigram.keystore`;
 otherwise a throwaway keystore is generated. Do not commit your keystore, and
 keep the same one to reinstall without losing app data.
 

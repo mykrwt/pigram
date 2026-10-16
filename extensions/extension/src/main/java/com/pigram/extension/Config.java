@@ -6,7 +6,8 @@ import android.content.SharedPreferences;
 import java.util.HashMap;
 
 /**
- * Runtime configuration backed by SharedPreferences ("pigram_prefs").
+ * Runtime configuration uses the historic SharedPreferences file name so existing
+ * users retain their settings across the Pigram rebrand.
  *
  * Independent block toggles (feed, explore, reels, stories, instants, notes,
  * suggested, ads) plus the permanent "hardcore" lock. The application Context
@@ -14,7 +15,7 @@ import java.util.HashMap;
  */
 public final class Config {
 
-    private static final String PREFS = "pigram_prefs";
+    private static final String PREFS = "feurstagram_prefs"; // Legacy storage key: do not rename.
 
     /**
      * Set once any setting changes in this process. While true, leaving the
@@ -116,15 +117,15 @@ public final class Config {
     public static boolean isForceSdr() { return getBlocked("force_sdr", true); }
 
     /**
-     * Whether the home feed is restricted to accounts you follow (chronological
-     * "Following" feed) instead of the recommended feed. Off by default. Not a
+     * Whether to request Instagram's Following timeline instead of the ranked
+     * recommendation feed. Enabled by default where Instagram supports it. Not a
      * block_* surface, so the permanent lock never freezes it.
      */
     public static boolean isFollowingFeedOnly() {
-        return getBlocked("limit_following_feed", false);
+        return getBlocked("limit_following_feed", true);
     }
 
-    public static boolean isFeedBlocked()      { return getBlocked("block_feed", true); }
+    public static boolean isFeedBlocked()      { return getBlocked("block_feed", false); }
     public static boolean isExploreBlocked()   { return getBlocked("block_explore", true); }
     public static boolean isReelsBlocked()     { return getBlocked("block_reels", true); }
     /**
@@ -290,22 +291,6 @@ public final class Config {
         SharedPreferences prefs = prefs();
         if (prefs == null || value == null) return;
         prefs.edit().putString("last_seen_version", value).apply();
-    }
-
-    /**
-     * The package {@code lastUpdateTime} the "follow the official account" card was
-     * last shown for, or 0 if never. A different value on launch means the app was
-     * installed or updated since, so the card is due again.
-     */
-    public static long getFollowPromptShownFor() {
-        SharedPreferences prefs = prefs();
-        return prefs == null ? 0L : prefs.getLong("follow_prompt_update_time", 0L);
-    }
-
-    public static void setFollowPromptShownFor(long updateTime) {
-        SharedPreferences prefs = prefs();
-        if (prefs == null) return;
-        prefs.edit().putLong("follow_prompt_update_time", updateTime).apply();
     }
 
     public static void setNeedsRestart() { sNeedsRestart = true; }

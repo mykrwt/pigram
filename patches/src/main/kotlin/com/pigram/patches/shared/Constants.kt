@@ -15,7 +15,7 @@ object Constants {
         name = "Instagram",
         packageName = "com.instagram.android",
         apkFileType = ApkFileType.APK,
-        appIconColor = 0xFC483C,
+        appIconColor = 0x0B0B0C,
         // version = null targets the latest known build and every future one,
         // so the patches keep applying across Instagram updates.
         targets = listOf(
