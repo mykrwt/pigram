@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Feurstagram is a small open-source project. The goal is to keep discussion useful, respectful, and focused on making the project safer and easier to use.
+Pigram is a small open-source project. The goal is to keep discussion useful, respectful, and focused on making the project safer and easier to use.
 
 ## Expected behavior
 
